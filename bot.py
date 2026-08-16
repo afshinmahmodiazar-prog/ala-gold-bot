@@ -1,29 +1,23 @@
 import os
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import requests
+from datetime import datetime
 
+TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+# فعلاً برای تست اتصال به API
+API_URL = "https://brsapi.ir/FreeTsetmcBourseApi/Api_Free_Gold_Currency_v2.json"
 
+def get_prices():
+    response = requests.get(API_URL, timeout=20)
+    response.raise_for_status()
+    return response.json()
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "🪙 به ربات قیمت طلای ئالا خوش آمدید.\n\n"
-        "ربات با موفقیت فعال است. ✅"
-    )
+try:
+    data = get_prices()
 
+    print("API CONNECTED")
+    print(data)
 
-def main():
-    if not BOT_TOKEN:
-        raise ValueError("TELEGRAM_BOT_TOKEN is not set")
-
-    app = Application.builder().token(BOT_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-
-    print("ALA GOLD BOT IS RUNNING...")
-    app.run_polling()
-
-
-if __name__ == "__main__":
-    main()
+except Exception as e:
+    print("API ERROR:", e)
+    raise
