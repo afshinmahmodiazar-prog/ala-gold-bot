@@ -1,0 +1,1 @@
+print("ALA GOLD BOT IS READY")
