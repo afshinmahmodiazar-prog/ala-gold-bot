@@ -9,41 +9,47 @@ BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHANNEL = "@alagoold"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
+    "User-Agent": "Mozilla/5.0"
 }
 
 
 def get_price(page_id):
     url = f"https://www.tgju.org/profile/{page_id}"
 
-    response = requests.get(
+    r = requests.get(
         url,
         headers=HEADERS,
         timeout=30
     )
 
-    response.raise_for_status()
+    r.raise_for_status()
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(r.text, "html.parser")
 
-    selectors = [
-        "span.value",
-        "span.price",
-        ".price",
-        ".value"
-    ]
+    # مقدار آخرین قیمت
+    element = soup.select_one(
+        "#last_price, .last_price, [data-field='last']"
+    )
 
-    for selector in selectors:
-        element = soup.select_one(selector)
+    if element:
+        text = element.get_text(" ", strip=True)
+        numbers = re.sub(r"[^\d]", "", text)
 
-        if element:
-            text = element.get_text(" ", strip=True)
+        if numbers:
+            return int(numbers)
+
+    # روش دوم: پیدا کردن فیلد last در صفحه
+    for tag in soup.find_all(["span", "td", "div"]):
+        field = str(tag.get("data-field", "")).lower()
+
+        if field == "last":
+            text = tag.get_text(" ", strip=True)
             numbers = re.sub(r"[^\d]", "", text)
 
             if numbers:
                 return int(numbers)
 
-    raise ValueError(f"Price not found: {page_id}")
+    raise ValueError(f"آخرین قیمت پیدا نشد: {page_id}")
 
 
 items = {
@@ -58,12 +64,8 @@ items = {
 prices = {}
 
 for name, page_id in items.items():
-    try:
-        rial_price = get_price(page_id)
-        prices[name] = rial_price // 10
-    except Exception as e:
-        print(f"{name}: ERROR -> {e}")
-        raise
+    rial = get_price(page_id)
+    prices[name] = rial // 10
 
 
 iran_time = datetime.now(
@@ -95,10 +97,10 @@ message = f"""🟡 قیمت لحظه‌ای طلا و ارز
 """
 
 
-telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 response = requests.post(
-    telegram_url,
+    url,
     data={
         "chat_id": CHANNEL,
         "text": message
@@ -106,7 +108,7 @@ response = requests.post(
     timeout=30
 )
 
-print("Telegram status:", response.status_code)
-print("Telegram response:", response.text)
+print("Telegram:", response.status_code)
+print(response.text)
 
 response.raise_for_status()
