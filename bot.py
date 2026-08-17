@@ -1,20 +1,17 @@
-import requests
-from bs4 import BeautifulSoup
+🟡 قیمت لحظه‌ای طلا و ارز
 
-URL = "https://www.tgju.org/profile/geram18"
+🔸 طلای ۱۸ عیار: [قیمت] تومان
+💵 دلار آزاد: [قیمت] تومان
 
-headers = {
-    "User-Agent": "Mozilla/5.0"
-}
+🕐 آخرین بروزرسانی: [ساعت]
 
-response = requests.get(URL, headers=headers, timeout=30)
-response.raise_for_status()
+💎 زرگری ئالا
+خرید و فروش آبشده و طلای دست دوم بدون اجرت
 
-soup = BeautifulSoup(response.text, "html.parser")
+📞 تماس:
+09141661837
+09141661727
+09144407480
 
-price = soup.select_one("#l-geram18")
-
-if price:
-    print("GOLD 18K:", price.get_text(strip=True))
-else:
-    print("GOLD PRICE NOT FOUND")
+📲 کانال تلگرام:
+@alagoold
