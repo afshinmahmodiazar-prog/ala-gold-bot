@@ -1,10 +1,4 @@
-import os
 import requests
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
-BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-CHANNEL = "@alagoold"
 
 URL = "https://call1.tgju.org/ajax.json"
 
@@ -28,14 +22,87 @@ def get_data():
 
 data = get_data()
 
+print("====================================")
 print("TGJU DATA RECEIVED")
-print(type(data))
-
-if isinstance(data, dict):
-    print("DATA KEYS:")
-    print(list(data.keys())[:100])
-
-print(data)
+print("====================================")
 
 
-print("تست دریافت اطلاعات TGJU تمام شد.")
+# پیدا کردن لیست اطلاعات
+items = []
+
+if isinstance(data, list):
+    items = data
+
+elif isinstance(data, dict):
+    for key in ["data", "results", "items"]:
+        if isinstance(data.get(key), list):
+            items = data[key]
+            break
+
+
+print("تعداد رکوردها:", len(items))
+print("====================================")
+
+
+# نمایش رکوردهای مربوط به طلا و ارز
+keywords = [
+    "gold",
+    "geram",
+    "dollar",
+    "usd",
+    "eur",
+    "euro",
+    "iqd",
+    "iraq",
+    "dinar",
+    "try",
+    "turkey",
+    "lira",
+    "لیر",
+    "دلار",
+    "یورو",
+    "دینار",
+    "طلا"
+]
+
+
+found = 0
+
+
+for item in items:
+
+    if not isinstance(item, dict):
+        continue
+
+    name = str(item.get("name", ""))
+    slug = str(item.get("slug", ""))
+    title = str(item.get("title", ""))
+    title_en = str(item.get("title_en", ""))
+
+    text = (
+        name + " " +
+        slug + " " +
+        title + " " +
+        title_en
+    ).lower()
+
+    if any(keyword.lower() in text for keyword in keywords):
+
+        print(
+            "NAME:",
+            name,
+            "| SLUG:",
+            slug,
+            "| TITLE:",
+            title,
+            "| PRICE:",
+            item.get("p")
+        )
+
+        found += 1
+
+
+print("====================================")
+print("تعداد موارد پیدا شده:", found)
+print("تست TGJU تمام شد.")
+print("====================================")
