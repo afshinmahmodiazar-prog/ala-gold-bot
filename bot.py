@@ -1,11 +1,18 @@
-🟡 قیمت لحظه‌ای طلا و ارز
+import os
+import requests
 
-🔸 طلای ۱۸ عیار: [قیمت] تومان
-💵 دلار آزاد: [قیمت] تومان
+BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+CHANNEL = "@alagoold"
 
-🕐 آخرین بروزرسانی: [ساعت]
+message = """🟡 قیمت لحظه‌ای طلا و ارز
+
+🔸 طلای ۱۸ عیار: XXXXX تومان
+💵 دلار آزاد: XXXXX تومان
+
+🕐 آخرین بروزرسانی: تست
 
 💎 زرگری ئالا
+
 خرید و فروش آبشده و طلای دست دوم بدون اجرت
 
 📞 تماس:
@@ -13,5 +20,21 @@
 09141661727
 09144407480
 
-📲 کانال تلگرام:
-@alagoold
+📲 @alagoold
+"""
+
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+response = requests.post(
+    url,
+    data={
+        "chat_id": CHANNEL,
+        "text": message
+    },
+    timeout=30
+)
+
+print("Telegram status:", response.status_code)
+print("Telegram response:", response.text)
+
+response.raise_for_status()
