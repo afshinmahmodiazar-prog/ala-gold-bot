@@ -1,222 +1,74 @@
-import os
-import requests
+import os,re,requests
 from bs4 import BeautifulSoup
-import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-CHANNEL = "@alagoold"
+TOKEN=os.environ["TELEGRAM_BOT_TOKEN"]
+CHANNEL="@alagoold"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36",
-    "Accept-Language": "fa-IR,fa;q=0.9,en;q=0.8"
+items={
+"طلای ۱۸ عیار":"geram18",
+"دلار":"price_dollar_rl",
+"یورو":"price_eur",
+"دینار عراق":"price_iqd",
+"لیر ترکیه":"price_try"
 }
 
+H={"User-Agent":"Mozilla/5.0"}
 
-ITEMS = {
-    "طلای ۱۸ عیار": "geram18",
-    "دلار": "price_dollar_rl",
-    "یورو": "price_eur",
-    "دینار عراق": "price_iqd",
-    "لیر ترکیه": "price_try"
-}
+def price(slug):
+    r=requests.get(f"https://www.tgju.org/profile/{slug}",headers=H,timeout=30)
+    r.raise_for_status()
+    s=BeautifulSoup(r.text,"html.parser")
 
+    for x in ["#last","#last-price",".last-price",".last","[data-field='last']"]:
+        e=s.select_one(x)
+        if e:
+            n=re.sub(r"\D","",e.get_text())
+            if n:return int(n)//10
 
-def get_price(name, page_id):
+    t=s.get_text(" ",strip=True)
+    for p in [r"نرخ فعلی\s*([\d,]+)",r"آخرین قیمت\s*([\d,]+)"]:
+        m=re.search(p,t)
+        if m:return int(re.sub(r"\D","",m.group(1)))//10
 
-    url = f"https://www.tgju.org/profile/{page_id}"
+    raise ValueError(f"قیمت {slug} پیدا نشد")
 
-    response = requests.get(
-        url,
-        headers=HEADERS,
-        timeout=30
-    )
+p={}
 
-    response.raise_for_status()
+for name,slug in items.items():
+    try:p[name]=price(slug)
+    except Exception as e:print(name,e)
 
-    soup = BeautifulSoup(response.text, "html.parser")
+if not p.get("طلای ۱۸ عیار"):
+    raise ValueError("قیمت طلا دریافت نشد")
 
-    # روش‌های مختلف پیدا کردن نرخ فعلی TGJU
-    selectors = [
-        "#last",
-        "#last-price",
-        ".last-price",
-        ".last",
-        "[data-field='last']",
-        "[data-field='p']"
-    ]
+time=datetime.now(ZoneInfo("Asia/Tehran")).strftime("%H:%M")
 
-    for selector in selectors:
+msg=f"""🟡 قیمت لحظه‌ای طلا و ارز
 
-        element = soup.select_one(selector)
+🟡 طلای ۱۸ عیار: {p.get("طلای ۱۸ عیار","نامشخص"):,} تومان
+💵 دلار: {p.get("دلار","نامشخص"):,} تومان
+💶 یورو: {p.get("یورو","نامشخص"):,} تومان
+🇮🇶 دینار عراق: {p.get("دینار عراق","نامشخص"):,} تومان
+🇹🇷 لیر ترکیه: {p.get("لیر ترکیه","نامشخص"):,} تومان
 
-        if element:
-
-            text = element.get_text(
-                " ",
-                strip=True
-            )
-
-            numbers = re.sub(
-                r"[^\d]",
-                "",
-                text
-            )
-
-            if numbers:
-
-                print(
-                    name,
-                    "=>",
-                    numbers
-                )
-
-                return int(numbers)
-
-    # جستجوی متنی برای «نرخ فعلی»
-    text = soup.get_text(
-        " ",
-        strip=True
-    )
-
-    patterns = [
-        r"نرخ فعلی\s*([0-9,]+)",
-        r"آخرین قیمت\s*([0-9,]+)",
-        r"قیمت فعلی\s*([0-9,]+)"
-    ]
-
-    for pattern in patterns:
-
-        match = re.search(
-            pattern,
-            text
-        )
-
-        if match:
-
-            numbers = re.sub(
-                r"[^\d]",
-                "",
-                match.group(1)
-            )
-
-            if numbers:
-
-                print(
-                    name,
-                    "=>",
-                    numbers
-                )
-
-                return int(numbers)
-
-    raise ValueError(
-        f"قیمت فعلی {name} پیدا نشد"
-    )
-
-
-prices = {}
-
-print("================================")
-print("شروع دریافت قیمت‌ها")
-print("================================")
-
-
-for name, page_id in ITEMS.items():
-
-    try:
-
-        rial_price = get_price(
-            name,
-            page_id
-        )
-
-        toman_price = rial_price // 10
-
-        prices[name] = toman_price
-
-    except Exception as error:
-
-        print(
-            name,
-            "ERROR:",
-            error
-        )
-
-
-print("================================")
-print("قیمت‌های دریافت‌شده:")
-print(prices)
-print("================================")
-
-
-if "طلای ۱۸ عیار" not in prices:
-    raise ValueError(
-        "قیمت طلای ۱۸ عیار دریافت نشد"
-    )
-
-
-iran_time = datetime.now(
-    ZoneInfo("Asia/Tehran")
-).strftime("%H:%M")
-
-
-message = f"""🟡 قیمت لحظه‌ای طلا و ارز
-
-🟡 طلای ۱۸ عیار:
-{prices.get("طلای ۱۸ عیار", "نامشخص"):,} تومان
-
-💵 دلار:
-{prices.get("دلار", "نامشخص"):,} تومان
-
-💶 یورو:
-{prices.get("یورو", "نامشخص"):,} تومان
-
-🇮🇶 دینار عراق:
-{prices.get("دینار عراق", "نامشخص"):,} تومان
-
-🇹🇷 لیر ترکیه:
-{prices.get("لیر ترکیه", "نامشخص"):,} تومان
-
-🕐 آخرین بروزرسانی:
-{iran_time}
+🕐 بروزرسانی: {time}
 
 💎 زرگری ئالا
-
 خرید و فروش آبشده و طلای دست دوم بدون اجرت
 
-📞 تماس:
-09141661837
-09141661727
-09144407480
+📞 09141661837
+📞 09141661727
+📞 09144407480
 
-📲 @alagoold
-"""
+📲 @alagoold"""
 
-
-telegram_url = (
-    f"https://api.telegram.org/"
-    f"bot{BOT_TOKEN}/sendMessage"
+r=requests.post(
+ f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+ data={"chat_id":CHANNEL,"text":msg},
+ timeout=30
 )
 
-
-response = requests.post(
-    telegram_url,
-    data={
-        "chat_id": CHANNEL,
-        "text": message
-    },
-    timeout=30
-)
-
-
-print("================================")
-print("Telegram status:", response.status_code)
-print(response.text)
-print("================================")
-
-
-response.raise_for_status()
-
-print("پیام با موفقیت ارسال شد.")
+print(r.text)
+r.raise_for_status()
