@@ -1,10 +1,10 @@
 name: ALA Gold Price Bot
 
 on:
-  workflow_dispatch:
-
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "7,37 * * * *"
+
+  workflow_dispatch:
 
   push:
     branches:
