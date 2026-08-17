@@ -1,23 +1,25 @@
-import os
 import requests
-from datetime import datetime
 
-TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+url = "https://brsapi.ir/FreeTsetmcBourseApi/Api_Free_Gold_Currency_v2.json"
 
-# فعلاً برای تست اتصال به API
-API_URL = "https://brsapi.ir/FreeTsetmcBourseApi/Api_Free_Gold_Currency_v2.json"
-
-def get_prices():
-    response = requests.get(API_URL, timeout=20)
-    response.raise_for_status()
-    return response.json()
+headers = {
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json"
+}
 
 try:
-    data = get_prices()
+    response = requests.get(
+        url,
+        headers=headers,
+        timeout=30
+    )
 
-    print("API CONNECTED")
-    print(data)
+    print("STATUS:", response.status_code)
+    print("CONTENT:")
+    print(response.text[:10000])
+
+    response.raise_for_status()
 
 except Exception as e:
-    print("API ERROR:", e)
+    print("ERROR:", repr(e))
     raise
