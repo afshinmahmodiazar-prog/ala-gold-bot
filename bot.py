@@ -20,6 +20,27 @@ def get_data():
     return response.json()
 
 
+def find_items(obj, results):
+    if isinstance(obj, dict):
+
+        # اگر این بخش یک رکورد قیمت باشد
+        if "p" in obj and (
+            "name" in obj or
+            "slug" in obj or
+            "title" in obj
+        ):
+            results.append(obj)
+
+        # ادامه جستجو در تمام بخش‌های داخل آن
+        for value in obj.values():
+            find_items(value, results)
+
+    elif isinstance(obj, list):
+
+        for value in obj:
+            find_items(value, results)
+
+
 data = get_data()
 
 print("====================================")
@@ -27,27 +48,36 @@ print("TGJU DATA RECEIVED")
 print("====================================")
 
 
-# پیدا کردن لیست اطلاعات
 items = []
 
-if isinstance(data, list):
-    items = data
-
-elif isinstance(data, dict):
-    for key in ["data", "results", "items"]:
-        if isinstance(data.get(key), list):
-            items = data[key]
-            break
+find_items(data, items)
 
 
-print("تعداد رکوردها:", len(items))
+# حذف رکوردهای تکراری
+unique_items = {}
+
+for item in items:
+
+    key = (
+        str(item.get("name", "")),
+        str(item.get("slug", "")),
+        str(item.get("title", ""))
+    )
+
+    unique_items[key] = item
+
+
+items = list(unique_items.values())
+
+
+print("تعداد رکوردهای قیمت:", len(items))
 print("====================================")
 
 
-# نمایش رکوردهای مربوط به طلا و ارز
 keywords = [
     "gold",
     "geram",
+    "18",
     "dollar",
     "usd",
     "eur",
@@ -70,9 +100,6 @@ found = 0
 
 
 for item in items:
-
-    if not isinstance(item, dict):
-        continue
 
     name = str(item.get("name", ""))
     slug = str(item.get("slug", ""))
@@ -103,6 +130,6 @@ for item in items:
 
 
 print("====================================")
-print("تعداد موارد پیدا شده:", found)
-print("تست TGJU تمام شد.")
+print("تعداد موارد مرتبط:", found)
 print("====================================")
+print("تست TGJU تمام شد.")
