@@ -58,8 +58,12 @@ items = {
 prices = {}
 
 for name, page_id in items.items():
-    rial_price = get_price(page_id)
-    prices[name] = rial_price // 10
+    try:
+        rial_price = get_price(page_id)
+        prices[name] = rial_price // 10
+    except Exception as e:
+        print(f"{name}: ERROR -> {e}")
+        raise
 
 
 iran_time = datetime.now(
@@ -91,9 +95,7 @@ message = f"""🟡 قیمت لحظه‌ای طلا و ارز
 """
 
 
-telegram_url = (
-    f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-)
+telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 response = requests.post(
     telegram_url,
