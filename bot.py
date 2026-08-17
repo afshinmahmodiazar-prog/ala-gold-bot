@@ -1,22 +1,20 @@
 import requests
+from bs4 import BeautifulSoup
 
 URL = "https://www.tgju.org/profile/geram18"
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
+    "User-Agent": "Mozilla/5.0"
 }
 
-try:
-    r = requests.get(URL, headers=headers, timeout=30)
+response = requests.get(URL, headers=headers, timeout=30)
+response.raise_for_status()
 
-    print("STATUS:", r.status_code)
-    print("LENGTH:", len(r.text))
+soup = BeautifulSoup(response.text, "html.parser")
 
-    if r.status_code == 200:
-        print("TGJU CONNECTION OK")
-    else:
-        print("TGJU CONNECTION FAILED")
+price = soup.select_one("#l-geram18")
 
-except Exception as e:
-    print("ERROR:", repr(e))
-    raise
+if price:
+    print("GOLD 18K:", price.get_text(strip=True))
+else:
+    print("GOLD PRICE NOT FOUND")
