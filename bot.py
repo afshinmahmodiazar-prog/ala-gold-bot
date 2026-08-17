@@ -1,24 +1,21 @@
 import requests
 
-url = "https://brsapi.ir/FreeTsetmcBourseApi/Api_Free_Gold_Currency_v2.json"
+URL = "https://www.tgju.org/profile/geram18"
 
 headers = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
 }
 
 try:
-    response = requests.get(
-        url,
-        headers=headers,
-        timeout=30
-    )
+    r = requests.get(URL, headers=headers, timeout=30)
 
-    print("STATUS:", response.status_code)
-    print("CONTENT:")
-    print(response.text[:10000])
+    print("STATUS:", r.status_code)
+    print("LENGTH:", len(r.text))
 
-    response.raise_for_status()
+    if r.status_code == 200:
+        print("TGJU CONNECTION OK")
+    else:
+        print("TGJU CONNECTION FAILED")
 
 except Exception as e:
     print("ERROR:", repr(e))
